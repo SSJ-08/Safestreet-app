@@ -22,18 +22,34 @@ const uploadRoutes = require('./routes/upload');
 const analyzeRoutes = require('./routes/analyze');
 
 const app = express();
-app.use(cors());
+
+// --- CORS Setup ---
+app.use(cors({
+    origin: '*',  // Replace '*' with your frontend URL for better security
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+}));
+
 app.use(express.json());
-app.use('/uploads', express.static('uploads'));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use('/pdfs', express.static(path.join(__dirname, 'pdfs')));
+
 
 // --- In-Memory Store for OTPs ---
 let otpStore = {};
 
 // --- MongoDB Connection ---
-mongoose.connect(process.env.MONGO_URI)
-  .then(() => console.log('✅ MongoDB connected'))
-  .catch(err => console.error('❌ MongoDB connection error:', err));
+// mongoose.connect(process.env.MONGO_URI)
+//   .then(() => console.log('✅ MongoDB connected'))
+//   .catch(err => console.error('❌ MongoDB connection error:', err));
+
+
+mongoose.connect(process.env.MONGO_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+})
+.then(() => console.log('MongoDB connected'))
+.catch(err => console.error('MongoDB connection error:', err));
 
 // --- Multer Setup ---
 const storage = multer.diskStorage({
@@ -117,7 +133,7 @@ app.post('/analyze', upload.single('image'), async (req, res) => {
     const form = new FormData();
     form.append('image', fs.createReadStream(req.file.path));
 
-    const flaskURL = 'https://0797-34-141-136-174.ngrok-free.app/analyze';
+    const flaskURL = 'https://2585-34-138-0-195.ngrok-free.app/analyze';
     const response = await axios.post(flaskURL, form, {
       headers: { ...form.getHeaders() },
     });
@@ -165,7 +181,7 @@ app.post('/api/upload/new', upload.single('image'), async (req, res) => {
     let longitude = null;
 
     try {
-      const geo = await axios.get('https://42f4-183-83-238-219.ngrok-free.app/search', {
+      const geo = await axios.get('https://e18c-183-82-237-45.ngrok-free.app/search', {
         params: { q: location, format: 'json', limit: 1 },
         headers: { 'User-Agent': 'SafeStreetApp/1.0 (youremail@example.com)' }
       });
@@ -260,6 +276,34 @@ app.post('/api/generate-pdf', async (req, res) => {
   });
 });
 
+
+
+
+app.post('/api/receive-report', async (req, res) => {
+    try {
+        const { imageUrl, location, summary, date, status } = req.body;
+
+        if (!imageUrl || !location || !summary || !date) {
+            return res.status(400).json({ message: "Missing required report fields" });
+        }
+
+        const newReport = new Upload({
+            imageUrl,
+            location,
+            summary,
+            date: new Date(date),  // Convert to Date object
+            status: status || "Pending",
+        });
+
+        await newReport.save();
+        res.status(200).json({ message: "Report received successfully" });
+    } catch (error) {
+        console.error("Error receiving report:", error);
+        res.status(500).json({ message: "Failed to receive report" });
+    }
+});
+
+
 // // --- Chatbot (RAG) Endpoint ---
 // app.post('/api/chat', async (req, res) => {
 //   try {
@@ -291,3 +335,6 @@ app.use('/api/analyze', analyzeRoutes);
 // --- Start Server ---
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+
+
+
