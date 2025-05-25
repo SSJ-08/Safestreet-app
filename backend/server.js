@@ -473,7 +473,7 @@ app.post('/analyze', upload.single('image'), async (req, res) => {
     const form = new FormData();
     form.append('image', fs.createReadStream(req.file.path));
 
-    const flaskURL = 'https://74f4-34-19-20-71.ngrok-free.app/analyze';
+    const flaskURL = 'https://0e4f-34-106-97-9.ngrok-free.app/analyze';
     const response = await axios.post(flaskURL, form, {
       headers: { ...form.getHeaders() },
     });

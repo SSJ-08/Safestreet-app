@@ -2957,9 +2957,9 @@ const sendOtpToEmail = async () => {
 
   const sendToAuthorities = async (report: Report) => {
     try {
-        // const res = await fetch('http://localhost:8000/api/receive-report',
+        // const res = await fetch('http://localhost:8000/api/receive-report',{
           
-          const res = await fetch('http://192.168.29.113:8000/api/receive-report', {
+           const res = await fetch('http://192.168.29.113:8000/api/receive-report', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
